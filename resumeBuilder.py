@@ -4,7 +4,7 @@ from docx.shared import Inches
 from docx.oxml.ns import qn
 from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
-import  json
+import json
 
 def create_list(paragraph, list_type):
     p = paragraph._p #access to xml paragraph element
@@ -107,8 +107,8 @@ for paragraph in document.paragraphs:
     if 'degree' in text:
         replace_in_line(paragraph,"Degree",parse_json_basic(json,"Education","Degree"))
 
-    if 'date' in text and order[0] == "education":
-        replace_in_line(paragraph,"Date",parse_json_basic(json,"Education","GradDate"))
+    if 'graddate' in text and order[0] == "education":
+        replace_in_line(paragraph,"GradDate",parse_json_basic(json,"Education","GradDate"))
     
     if 'school' in text and order[0] == "education":
         replace_in_line(paragraph,"School",parse_json_basic(json,"Education","School"))
@@ -116,7 +116,7 @@ for paragraph in document.paragraphs:
     if 'major' in text and order[0] == "education":
         #just a check to see if they double majored in anything
         major = parse_json_basic(json,"Education","Major")
-        paragraph.text += " "+major[0]
+        paragraph.text += " "+major[0] 
 
     if 'minor' in text and order[0] == "education":
         minorList = parse_json_basic(json,"Education","Minor")
@@ -130,14 +130,13 @@ for paragraph in document.paragraphs:
             doubleDegree = True
         if doubleDegree == True:
             for degree in range(1,len(doubleMajor)):
-                newDegree = paragraph.insert_paragraph_before(parse_json_basic(json,"Education","Degree"))
+                newDegree = paragraph.insert_paragraph_before(parse_json_basic(json,"Education","Degree")+" | "+parse_json_basic(json,"Education","GradDate")+" | " +parse_json_basic(json,"Education","School"))
                 newDegree.style = style
                 font = style.font
                 font.name = 'Cambria'
                 font.bold = True
                 font.size = Pt(11)
-
-                newMajor = paragraph.insert_paragraph_before("Major: "+doubleMajor[degree] ,style='List Bullet')
+                newMajor = paragraph.insert_paragraph_before("Major: "+doubleMajor[degree],style='List Bullet')
                 create_list(newMajor, "1")
         usedDoubleMajor = True
 
