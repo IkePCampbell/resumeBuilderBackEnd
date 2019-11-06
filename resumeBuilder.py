@@ -4,6 +4,7 @@ from docx.shared import Inches
 from docx.oxml.ns import qn
 from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
+from docx.shared import RGBColor
 import json
 
 def create_list(paragraph, list_type):
@@ -14,7 +15,6 @@ def create_list(paragraph, list_type):
     numId.set(qn('w:val'), list_type) #set list type/indentation
     numPr.append(numId) #add bullet type to number properties list
     pPr.append(numPr) #add number properties to paragraph
-
 
 def loadJsonData(jsonFile):
     input_file = open(jsonFile)
@@ -59,7 +59,21 @@ def order_of_blocks(document):
             order.append("experience")
         if text == "projects":
             order.append("projects")
+        if text == "end":
+            order.append("end")
     return order
+
+def skills(header,json):
+    paragraph.text = ""
+    paragraph.add_run(header).bold = True
+    paragraph.add_run(": ")
+    for lang in range(0,len(json)):
+        try:
+            test = json[lang+1]
+            paragraph.add_run(json[lang] +", ")
+        except IndexError:
+            paragraph.add_run(json[lang])
+                
 
 json = loadJsonData('data/NoSqlSchema.json')
 f = open('templates/template1.docx', 'rb')
@@ -67,11 +81,16 @@ f = open('templates/template1.docx', 'rb')
 document = Document(f)
 
 usedDoubleMajor = False
+usedAllCerts = False
+usedMultipleProjects = False
+usedExperience = False
+
 styles = document.styles
 paragraph_styles = [
     s for s in styles if s.type == WD_STYLE_TYPE.PARAGRAPH
  ]
 style = styles['Heading 2']
+
         
 #First Step,
 order = order_of_blocks(document)
@@ -140,21 +159,135 @@ for paragraph in document.paragraphs:
                 create_list(newMajor, "1")
         usedDoubleMajor = True
 
+    #Certificaation Block
+    if 'certificationname' in text and order[0] == "certifications":  
+        replace_in_line(paragraph,"CertificationName",parse_json_basic(json, "Certification","CertName"))
+
+    if 'certificationassociation' in text and order[0] == "certifications":  
+        replace_in_line(paragraph,"CertificationAssociation",parse_json_basic(json, "Certification","CertAssociation"))
+
+    if 'certificationdate' in text and order[0] == "certifications":  
+        replace_in_line(paragraph,"CertificationDate",parse_json_basic(json, "Certification","CertDate"))
+
+    if "certifications" not in order and usedAllCerts == False:
+        certificationList = json["Certification"]
+        if len(certificationList) > 1:
+            multipleCertifications = True
+        if multipleCertifications == True:
+            for cert in range(1,len(certificationList)):
+                newCert = paragraph.insert_paragraph_before(json["Certification"][cert]["CertName"]+", "+json["Certification"][cert]["CertAssociation"]+" — " +json["Certification"][cert]["CertDate"])
+                pstyle = document.styles['Normal']
+                pfont = pstyle.font
+                pfont.name = 'Cambria'
+                pfont.size = Pt(11)
+                pfont.color.rgb = RGBColor(64,64,64)
+                create_list(newCert, "1")
+                newCert.style = document.styles['Normal']
+        usedAllCerts = True
+
+    #Skills Block
+    if "langskills" in text and "skills" == order[0]:
+        skills("Languages", parse_json_basic(json, "Skill","Languages"))
+
+    if "frameskills" in text and "skills" == order[0]:
+        skills("Frameworks", parse_json_basic(json, "Skill","Frameworks"))
+
+    if "techskills" in text and "skills" == order[0]:
+        skills("Technologies & Software", parse_json_basic(json, "Skill","DatabaseTech"))
+
+    #Project Block
+
+    if 'projname' in text and order[0] == "projects":
+        replace_in_line(paragraph,"ProjName",parse_json_basic(json,"Project","ProjName"))
+
+    if 'projassociation' in text and order[0] == "projects":
+        replace_in_line(paragraph,"ProjAssociation",parse_json_basic(json,"Project","ProjAssociation"))
     
-
-
-        
-                
-            
-            
-
-            
-            
-        
-        
-
+    if 'projdate' in text and order[0] == "projects":
+        replace_in_line(paragraph,"ProjDate",parse_json_basic(json,"Project","ProjDate"))
     
-        #replace_in_line(paragraph,"Degree",)
+    if 'projinfo1' in text and order[0] == "projects":
+        #just a check to see if they double majored in anything
+        replace_in_line(paragraph,"ProjInfo1",parse_json_basic(json,"Project","ProjInfo1"))
+
+    if 'projinfo2' in text and order[0] == "projects":
+        #just a check to see if they double majored in anything
+        replace_in_line(paragraph,"ProjInfo2",parse_json_basic(json,"Project","ProjInfo2"))
+
+    if 'projinfo3' in text and order[0] == "projects":
+        #just a check to see if they double majored in anything
+        replace_in_line(paragraph,"ProjInfo3",parse_json_basic(json,"Project","ProjInfo3"))
+
+    if "projects" not in order and usedMultipleProjects == False:
+        multiProj = json["Project"]
+        if len(multiProj) > 1:
+            moreProj = True
+        if moreProj == True:
+            for proj in range(1,len(multiProj)):
+                newProj = paragraph.insert_paragraph_before(multiProj[proj]["ProjName"]+" | "+multiProj[proj]["ProjAssociation"]+" | " +multiProj[proj]["ProjDate"])
+                newProj.style = style
+                font = style.font
+                font.name = 'Cambria'
+                font.bold = True
+                font.size = Pt(11)
+                projInfo1 = paragraph.insert_paragraph_before(multiProj[proj]["ProjInfo1"],style='List Bullet')
+                projInfo2 = paragraph.insert_paragraph_before(multiProj[proj]["ProjInfo2"],style='List Bullet')
+                projInfo3 = paragraph.insert_paragraph_before(multiProj[proj]["ProjInfo3"],style='List Bullet')
+                create_list(projInfo1, "1")
+                create_list(projInfo2, "1")
+                create_list(projInfo3, "1")
+        usedMultipleProjects = True
+
+    #Experience Block
+    if 'jobtitle' in text and order[0] == "experience":
+        replace_in_line(paragraph,"JobTitle",parse_json_basic(json,"Experience","JobTitle"))
+
+    if 'joborg' in text and order[0] == "experience":
+        replace_in_line(paragraph,"JobOrg",parse_json_basic(json,"Experience","JobOrg"))
+    
+    if 'startdate' in text and order[0] == "experience":
+        replace_in_line(paragraph,"StartDate",parse_json_basic(json,"Experience","JobStartDate"))
+    
+    if 'enddate' in text and order[0] == "experience":
+        #just a check to see if they double majored in anything
+        replace_in_line(paragraph,"EndDate",parse_json_basic(json,"Experience","JobEndDate"))
+
+    if 'jobinfo1' in text and order[0] == "experience":
+        #just a check to see if they double majored in anything
+        replace_in_line(paragraph,"JobInfo1",parse_json_basic(json,"Experience","JobInfo1"))
+
+    if 'jobinfo2' in text and order[0] == "experience":
+        #just a check to see if they double majored in anything
+        replace_in_line(paragraph,"JobInfo2",parse_json_basic(json,"Experience","JobInfo2"))
+
+    if 'jobinfo3' in text and order[0] == "experience":
+        #just a check to see if they double majored in anything
+        replace_in_line(paragraph,"JobInfo3",parse_json_basic(json,"Experience","JobInfo3"))
+
+    if "experience" not in order and usedExperience == False:
+        multiExp = json["Experience"]
+        if len(multiExp) > 1:
+            moreExp = True
+        if moreExp == True:
+            for exp in range(1,len(multiExp)):
+                newExp = paragraph.insert_paragraph_before(multiExp[exp]["JobTitle"]+" | "+multiExp[exp]["JobOrg"]+" | " +multiExp[exp]["JobStartDate"]+" - " +multiExp[exp]["JobEndDate"])
+                newExp.style = style
+                font = style.font
+                font.name = 'Cambria'
+                font.bold = True
+                font.size = Pt(11)
+                jobInfo1 = paragraph.insert_paragraph_before(multiExp[exp]["JobInfo1"],style='List Bullet')
+                jobInfo2 = paragraph.insert_paragraph_before(multiExp[exp]["JobInfo2"],style='List Bullet')
+                jobInfo3 = paragraph.insert_paragraph_before(multiExp[exp]["JobInfo3"],style='List Bullet')
+                create_list(jobInfo1, "1")
+                create_list(jobInfo2, "1")
+                create_list(jobInfo3, "1")
+        usedExperience = True
+
+    if "end" == order[0]:
+        paragraph.text = ""
+
+
 
 
 

@@ -25,8 +25,8 @@
 			"JobTitle": "Junior Software Developer",
 			"JobOrg": "Yash Technologies",
 			"JobStartDate": "June 2018",
-			"JobEndDate": "",
-			"JobInfo1": "Graduate Training progam",
+			"JobEndDate": "Present",
+			"JobInfo1": "Graduate Training program",
 			"JobInfo2": "some project",
 			"JobInfo3": "Cat-o-pilar"
 		},
@@ -59,9 +59,12 @@
 	],
 	"Certification": [{
 		"CertName": "AWS Associate Developer",
-		"CertDate": "2019",
+		"CertDate": "May 2019",
 		"CertAssociation": "Amazon Web Services"
-	}],
+		},{
+		"CertName": "AWS Associate Developer",
+		"CertDate": "June, 2020",
+		"CertAssociation": "Amazon Web Services"}],
 	"Skill": [{
 		"Languages": [
 			"JavaScript",
