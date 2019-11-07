@@ -27,7 +27,6 @@ def replace_in_line(paragraph,replace,content):
     pos = paragraph.text.index(replace)
     paragraph.text = paragraph.text[:pos]+content+paragraph.text[pos+toSkip:]
 
-
 def check_new_section(currentOrder,possibleSection):
     try: 
         if currentOrder[1] == possibleSection:
@@ -74,7 +73,6 @@ def skills(header,json):
         except IndexError:
             paragraph.add_run(json[lang])
                 
-
 json = loadJsonData('data/NoSqlSchema.json')
 f = open('templates/template1.docx', 'rb')
 #opens the document
@@ -90,12 +88,12 @@ paragraph_styles = [
     s for s in styles if s.type == WD_STYLE_TYPE.PARAGRAPH
  ]
 style = styles['Heading 2']
-
-        
+       
 #First Step,
 order = order_of_blocks(document)
 
 for paragraph in document.paragraphs:
+    print(paragraph)
     #rint(paragraph.text)
     text = paragraph.text.lower()
     order = check_new_section(order, text)
@@ -287,10 +285,6 @@ for paragraph in document.paragraphs:
     if "end" == order[0]:
         paragraph.text = ""
 
-
-
-
-
 document.save("demo.docx")
         
 
@@ -312,9 +306,6 @@ document.save("demo.docx")
                 
                 newMinor = paragraph.insert_paragraph_before("Minor:",style='List Bullet')
                 create_list(newMinor,"1")
-
-
-
 
 For columns
 section = document.sections[0]
